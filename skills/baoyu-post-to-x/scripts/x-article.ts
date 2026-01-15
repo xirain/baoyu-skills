@@ -141,44 +141,30 @@ class CdpConnection {
   }
 }
 
+function getScriptDir(): string {
+  return path.dirname(new URL(import.meta.url).pathname);
+}
+
 function copyImageToClipboard(imagePath: string): boolean {
-  const scriptDir = path.dirname(new URL(import.meta.url).pathname);
-  const copyScript = path.join(scriptDir, 'copy-to-clipboard.ts');
+  const copyScript = path.join(getScriptDir(), 'copy-to-clipboard.ts');
   const result = spawnSync('npx', ['-y', 'bun', copyScript, 'image', imagePath], { stdio: 'inherit' });
   return result.status === 0;
 }
 
 function copyHtmlToClipboard(htmlPath: string): boolean {
-  const scriptDir = path.dirname(new URL(import.meta.url).pathname);
-  const copyScript = path.join(scriptDir, 'copy-to-clipboard.ts');
+  const copyScript = path.join(getScriptDir(), 'copy-to-clipboard.ts');
   const result = spawnSync('npx', ['-y', 'bun', copyScript, 'html', '--file', htmlPath], { stdio: 'inherit' });
   return result.status === 0;
 }
 
-function sendRealPasteKeystroke(retries = 3): boolean {
-  if (process.platform !== 'darwin') {
-    console.log('[x-article] Real keystroke only supported on macOS');
-    return false;
+function pasteFromClipboard(targetApp?: string, retries = 3, delayMs = 500): boolean {
+  const pasteScript = path.join(getScriptDir(), 'paste-from-clipboard.ts');
+  const args = ['npx', '-y', 'bun', pasteScript, '--retries', String(retries), '--delay', String(delayMs)];
+  if (targetApp) {
+    args.push('--app', targetApp);
   }
-
-  // Use osascript to send Cmd+V to frontmost application (Chrome)
-  const script = `
-    tell application "System Events"
-      keystroke "v" using command down
-    end tell
-  `;
-
-  for (let i = 0; i < retries; i++) {
-    const result = spawnSync('osascript', ['-e', script], { stdio: 'pipe' });
-    if (result.status === 0) {
-      return true;
-    }
-    // Wait a bit before retry
-    if (i < retries - 1) {
-      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 500);
-    }
-  }
-  return false;
+  const result = spawnSync(args[0]!, args.slice(1), { stdio: 'inherit' });
+  return result.status === 0;
 }
 
 interface ArticleOptions {
@@ -298,11 +284,6 @@ export async function publishArticle(options: ArticleOptions): Promise<void> {
         modifiers,
         windowsVirtualKeyCode: key.toUpperCase().charCodeAt(0),
       }, { sessionId });
-    };
-
-    const pasteFromClipboard = async (): Promise<void> => {
-      const modifiers = process.platform === 'darwin' ? 4 : 2; // Meta or Ctrl
-      await pressKey('v', modifiers);
     };
 
     // Check if we're on the articles list page (has Write button)
@@ -538,7 +519,7 @@ export async function publishArticle(options: ArticleOptions): Promise<void> {
         }, { sessionId });
 
         // Wait for scroll animation
-        await sleep(300);
+        await sleep(500);
 
         if (!placeholderFound.result.value) {
           console.warn(`[x-article] Placeholder not found in DOM: ${img.placeholder}`);
@@ -553,25 +534,26 @@ export async function publishArticle(options: ArticleOptions): Promise<void> {
           continue;
         }
 
-        await sleep(300);
+        // Wait for clipboard to be fully ready
+        await sleep(800);
 
         // Delete placeholder by pressing Enter (placeholder is already selected)
         console.log(`[x-article] Deleting placeholder with Enter...`);
         await cdp.send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 }, { sessionId });
         await cdp.send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 }, { sessionId });
-        await sleep(200);
+        await sleep(300);
 
-        // Paste image
+        // Paste image using paste script (activates Chrome, sends real keystroke)
         console.log(`[x-article] Pasting image...`);
-        if (sendRealPasteKeystroke()) {
+        if (pasteFromClipboard('Google Chrome', 5, 800)) {
           console.log(`[x-article] Image pasted: ${path.basename(img.localPath)}`);
         } else {
-          console.warn(`[x-article] Failed to paste image`);
+          console.warn(`[x-article] Failed to paste image after retries`);
         }
 
         // Wait for image to upload
         console.log(`[x-article] Waiting for upload...`);
-        await sleep(4000);
+        await sleep(5000);
       }
 
       console.log('[x-article] All images processed.');
@@ -633,17 +615,15 @@ export async function publishArticle(options: ArticleOptions): Promise<void> {
       console.log('[x-article] Article published!');
     } else {
       console.log('[x-article] Article composed (draft mode).');
-      console.log('[x-article] Browser will stay open for 60 seconds for review...');
-      await sleep(60_000);
+      console.log('[x-article] Browser remains open for manual review.');
     }
 
   } finally {
+    // Disconnect CDP but keep browser open
     if (cdp) {
-      try { await cdp.send('Browser.close', {}, { timeoutMs: 5_000 }); } catch {}
       cdp.close();
     }
-    setTimeout(() => { if (!chrome.killed) try { chrome.kill('SIGKILL'); } catch {} }, 2_000).unref?.();
-    try { chrome.kill('SIGTERM'); } catch {}
+    // Don't kill Chrome - let user review and close manually
   }
 }
 

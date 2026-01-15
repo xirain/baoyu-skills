@@ -34,6 +34,25 @@
 /plugin install content-skills@baoyu-skills
 ```
 
+**方式三：告诉 Agent**
+
+直接告诉 Claude Code：
+
+> 请帮我安装 github.com/JimLiu/baoyu-skills 中的 Skills
+
+## 更新技能
+
+更新技能到最新版本：
+
+1. 在 Claude Code 中运行 `/plugin`
+2. 切换到 **Marketplaces** 标签页（使用方向键或 Tab）
+3. 选择 **baoyu-skills**
+4. 选择 **Update marketplace**
+
+也可以选择 **Enable auto-update** 启用自动更新，每次启动时自动获取最新版本。
+
+![更新技能](./screenshots/update-plugins.png)
+
 ## 可用技能
 
 ### gemini-web

@@ -34,6 +34,25 @@ Run the following command in Claude Code:
 /plugin install content-skills@baoyu-skills
 ```
 
+**Option 3: Ask the Agent**
+
+Simply tell Claude Code:
+
+> Please install Skills from github.com/JimLiu/baoyu-skills
+
+## Update Skills
+
+To update skills to the latest version:
+
+1. Run `/plugin` in Claude Code
+2. Switch to **Marketplaces** tab (use arrow keys or Tab)
+3. Select **baoyu-skills**
+4. Choose **Update marketplace**
+
+You can also **Enable auto-update** to get the latest versions automatically.
+
+![Update Skills](./screenshots/update-plugins.png)
+
 ## Available Skills
 
 ### gemini-web

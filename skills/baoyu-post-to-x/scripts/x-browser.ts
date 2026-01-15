@@ -8,6 +8,26 @@ import process from 'node:process';
 
 const X_COMPOSE_URL = 'https://x.com/compose/post';
 
+function getScriptDir(): string {
+  return path.dirname(new URL(import.meta.url).pathname);
+}
+
+function copyImageToClipboard(imagePath: string): boolean {
+  const copyScript = path.join(getScriptDir(), 'copy-to-clipboard.ts');
+  const result = spawnSync('npx', ['-y', 'bun', copyScript, 'image', imagePath], { stdio: 'inherit' });
+  return result.status === 0;
+}
+
+function pasteFromClipboard(targetApp?: string, retries = 3, delayMs = 500): boolean {
+  const pasteScript = path.join(getScriptDir(), 'paste-from-clipboard.ts');
+  const args = ['npx', '-y', 'bun', pasteScript, '--retries', String(retries), '--delay', String(delayMs)];
+  if (targetApp) {
+    args.push('--app', targetApp);
+  }
+  const result = spawnSync(args[0]!, args.slice(1), { stdio: 'inherit' });
+  return result.status === 0;
+}
+
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -274,37 +294,46 @@ export async function postToX(options: XBrowserOptions): Promise<void> {
 
       console.log(`[x-browser] Pasting image: ${imagePath}`);
 
-      const scriptDir = path.dirname(new URL(import.meta.url).pathname);
-      const copyScript = path.join(scriptDir, 'copy-to-clipboard.ts');
-
-      const result = spawnSync('npx', ['-y', 'bun', copyScript, 'image', imagePath], { stdio: 'inherit' });
-      if (result.status !== 0) {
+      if (!copyImageToClipboard(imagePath)) {
         console.warn(`[x-browser] Failed to copy image to clipboard: ${imagePath}`);
         continue;
       }
 
+      // Wait for clipboard to be ready
+      await sleep(500);
+
+      // Focus the editor
       await cdp.send('Runtime.evaluate', {
         expression: `document.querySelector('[data-testid="tweetTextarea_0"]')?.focus()`,
       }, { sessionId });
+      await sleep(200);
 
-      const modifiers = process.platform === 'darwin' ? 4 : 2;
-      await cdp.send('Input.dispatchKeyEvent', {
-        type: 'keyDown',
-        key: 'v',
-        code: 'KeyV',
-        modifiers,
-        windowsVirtualKeyCode: 86,
-      }, { sessionId });
-      await cdp.send('Input.dispatchKeyEvent', {
-        type: 'keyUp',
-        key: 'v',
-        code: 'KeyV',
-        modifiers,
-        windowsVirtualKeyCode: 86,
-      }, { sessionId });
+      // Use paste script (handles platform differences, activates Chrome)
+      console.log('[x-browser] Pasting from clipboard...');
+      const pasteSuccess = pasteFromClipboard('Google Chrome', 5, 500);
+
+      if (!pasteSuccess) {
+        // Fallback to CDP (may not work for images on X)
+        console.log('[x-browser] Paste script failed, trying CDP fallback...');
+        const modifiers = process.platform === 'darwin' ? 4 : 2;
+        await cdp.send('Input.dispatchKeyEvent', {
+          type: 'keyDown',
+          key: 'v',
+          code: 'KeyV',
+          modifiers,
+          windowsVirtualKeyCode: 86,
+        }, { sessionId });
+        await cdp.send('Input.dispatchKeyEvent', {
+          type: 'keyUp',
+          key: 'v',
+          code: 'KeyV',
+          modifiers,
+          windowsVirtualKeyCode: 86,
+        }, { sessionId });
+      }
 
       console.log('[x-browser] Waiting for image upload...');
-      await sleep(3000);
+      await sleep(4000);
     }
 
     if (submit) {

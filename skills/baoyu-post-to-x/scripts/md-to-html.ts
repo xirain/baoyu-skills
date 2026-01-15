@@ -303,6 +303,7 @@ export async function parseMarkdown(
   // Resolve image paths (download remote, resolve relative)
   const contentImages: ImageInfo[] = [];
   let isFirstImage = true;
+  let coverPlaceholder: string | null = null;
 
   for (let i = 0; i < images.length; i++) {
     const img = images[i]!;
@@ -311,6 +312,7 @@ export async function parseMarkdown(
     // First image becomes cover if no cover specified
     if (isFirstImage && !coverImagePath) {
       coverImagePath = localPath;
+      coverPlaceholder = `[[IMAGE_PLACEHOLDER_${i + 1}]]`;
       isFirstImage = false;
       // Don't add to contentImages, it's the cover
       continue;
@@ -325,6 +327,13 @@ export async function parseMarkdown(
     });
   }
 
+  // Remove cover placeholder from HTML if first image was used as cover
+  let finalHtml = html;
+  if (coverPlaceholder) {
+    // Remove the placeholder and its containing <p> tag
+    finalHtml = finalHtml.replace(new RegExp(`<p>${coverPlaceholder.replace(/[[\]]/g, '\\$&')}</p>\\n?`, 'g'), '');
+  }
+
   // Resolve cover image path
   let resolvedCoverImage: string | null = null;
   if (coverImagePath) {
@@ -335,7 +344,7 @@ export async function parseMarkdown(
     title,
     coverImage: resolvedCoverImage,
     contentImages,
-    html,
+    html: finalHtml,
     totalBlocks,
   };
 }
