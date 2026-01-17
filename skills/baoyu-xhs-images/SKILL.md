@@ -132,7 +132,7 @@ posts/ai-future/
     └── 03-ending.png
 ```
 
-### Without Article Path
+### Without Article Path (Pasted Content)
 
 Save to `xhs-outputs/YYYY-MM-DD/[topic-slug]/`:
 
@@ -140,6 +140,7 @@ Save to `xhs-outputs/YYYY-MM-DD/[topic-slug]/`:
 xhs-outputs/
 └── 2026-01-13/
     └── ai-agent-guide/
+        ├── source.md           # Saved pasted content
         ├── outline.md
         ├── prompts/
         │   ├── 01-cover.md
@@ -152,10 +153,17 @@ xhs-outputs/
 
 ### Step 1: Analyze Content & Select Style/Layout
 
-1. Read content
-2. If `--style` specified, use that style; otherwise auto-select
-3. If `--layout` specified, use that layout; otherwise auto-select per image
-4. Determine image count based on content complexity:
+1. **Save source content** (if not already a file):
+   - If user provides a file path: use as-is
+   - If user pastes content: save to `source.md` in target directory
+2. Read content
+3. If `--style` specified, use that style; otherwise auto-select 3 candidates
+4. If `--layout` specified, use that layout; otherwise auto-select per image
+5. **Language detection**:
+   - Detect **source language** from content
+   - Detect **user language** from conversation context
+   - Note if source_language ≠ user_language (will ask in Step 4)
+6. Determine image count based on content complexity:
 
 | Content Type | Image Count |
 |-------------|-------------|
@@ -216,7 +224,57 @@ Plan for each image with style and layout specifications:
 
 Save outline as `outline.md`.
 
-### Step 4: Generate Images One by One
+### Step 4: Review & Confirm
+
+**Purpose**: Let user confirm all options in a single step before image generation.
+
+**IMPORTANT**: Present ALL options in a single confirmation step using AskUserQuestion. Do NOT interrupt workflow with multiple separate confirmations.
+
+1. **Generate 3 style variants** (if style not specified):
+   - Analyze content to select 3 most suitable styles
+   - Generate complete outline for each style variant
+   - Save as `outline-{style}.md` (e.g., `outline-cute.md`, `outline-notion.md`, `outline-tech.md`)
+
+2. **Determine which questions to ask**:
+
+   | Question | When to Ask |
+   |----------|-------------|
+   | Style variant | Always (required) |
+   | Default layout | Always (offer common options) |
+   | Language | Only if `source_language ≠ user_language` |
+
+3. **Present options** (use AskUserQuestion with all applicable questions):
+
+   **Question 1 (Style)** - always:
+   - Style A (recommended): [style name] - [brief description]
+   - Style B: [style name] - [brief description]
+   - Style C: [style name] - [brief description]
+   - Custom: Provide custom style reference
+
+   **Question 2 (Layout)** - always:
+   - sparse (Recommended for cover) - minimal info, maximum impact
+   - balanced - standard 3-4 points
+   - dense - high info density, knowledge cards
+   - list / comparison / flow - special formats
+
+   **Question 3 (Language)** - only if source ≠ user language:
+   - [Source language] (matches content)
+   - [User language] (your preference)
+
+   **Language handling**:
+   - If source language = user language: Just inform user (e.g., "Images will be in Chinese")
+   - If different: Ask which language to use
+
+4. **Apply selection**:
+   - Copy selected `outline-{style}.md` to `outline.md`
+   - If custom style provided, generate new outline with that style
+   - If different language selected, regenerate outline in that language
+   - User may edit `outline.md` directly for fine-tuning
+   - If modified, reload outline before proceeding
+
+5. **Proceed only after explicit user confirmation**
+
+### Step 5: Generate Images One by One
 
 For each image, create a prompt file with style and layout specifications.
 
@@ -273,7 +331,9 @@ If the image generation skill supports `--sessionId`:
 3. Report progress: "Generated X/N"
 4. Continue to next
 
-### Step 5: Completion Report
+**All prompts are written in the user's confirmed language preference.**
+
+### Step 6: Completion Report
 
 ```
 Xiaohongshu Infographic Series Complete!
@@ -319,5 +379,6 @@ Outline: outline.md
 - Image generation typically takes 10-30 seconds per image
 - Auto-retry once on generation failure
 - Use cartoon alternatives for sensitive public figures
-- Output language matches input content language
+- Prompts written in user's confirmed language preference
+- Text on images uses confirmed language
 - Maintain selected style consistency across all images in series

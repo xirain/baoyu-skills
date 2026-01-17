@@ -125,7 +125,11 @@ path/to/
 1. Read article content
 2. If `--style` specified, use that style
 3. Otherwise, scan for style signals and auto-select
-4. Extract key information:
+4. **Language detection**:
+   - Detect **source language** from article content
+   - Detect **user language** from conversation context
+   - Note if source_language ≠ user_language (will ask in Step 4)
+5. Extract key information:
    - Main topic and themes
    - Core messages per section
    - Abstract concepts needing visualization
@@ -173,9 +177,54 @@ path/to/
 ...
 ```
 
-### Step 4: Create Prompt Files
+### Step 4: Review & Confirm
+
+**Purpose**: Let user confirm all options in a single step before image generation.
+
+**IMPORTANT**: Present ALL options in a single confirmation step using AskUserQuestion. Do NOT interrupt workflow with multiple separate confirmations.
+
+1. **Generate 3 style variants**:
+   - Analyze content to select 3 most suitable styles
+   - Generate complete illustration plan for each style variant
+   - Save as `outline-{style}.md` (e.g., `outline-notion.md`, `outline-tech.md`, `outline-warm.md`)
+
+2. **Determine which questions to ask**:
+
+   | Question | When to Ask |
+   |----------|-------------|
+   | Style variant | Always (required) |
+   | Language | Only if `source_language ≠ user_language` |
+
+3. **Present options** (use AskUserQuestion with all applicable questions):
+
+   **Question 1 (Style)** - always:
+   - Style A (recommended): [style name] - [brief description]
+   - Style B: [style name] - [brief description]
+   - Style C: [style name] - [brief description]
+   - Custom: Provide custom style reference
+
+   **Question 2 (Language)** - only if source ≠ user language:
+   - [Source language] (matches article language)
+   - [User language] (your preference)
+
+   **Language handling**:
+   - If source language = user language: Just inform user (e.g., "Prompts will be in Chinese")
+   - If different: Ask which language to use for prompts
+
+4. **Apply selection**:
+   - Copy selected `outline-{style}.md` to `outline.md`
+   - If custom style provided, generate new plan with that style
+   - If different language selected, regenerate outline in that language
+   - User may edit `outline.md` directly for fine-tuning
+   - If modified, reload plan before proceeding
+
+5. **Proceed only after explicit user confirmation**
+
+### Step 5: Create Prompt Files
 
 Save prompts to `prompts/` directory with style-specific details.
+
+**All prompts are written in the user's confirmed language preference.**
 
 **Prompt Format**:
 
@@ -199,7 +248,7 @@ Text content (if any):
 Style notes: [specific style characteristics]
 ```
 
-### Step 5: Generate Images
+### Step 6: Generate Images
 
 **Image Generation Skill Selection**:
 1. Check available image generation skills
@@ -212,7 +261,7 @@ Style notes: [specific style characteristics]
 4. On failure, auto-retry once
 5. If retry fails, log reason, continue to next
 
-### Step 6: Update Article
+### Step 7: Update Article
 
 Insert generated images at corresponding positions:
 
@@ -225,7 +274,7 @@ Insert generated images at corresponding positions:
 - Leave one blank line before and after image
 - Alt text uses concise description in article's language
 
-### Step 7: Output Summary
+### Step 8: Output Summary
 
 ```
 Article Illustration Complete!
@@ -243,6 +292,57 @@ Illustration Positions:
 Failed:
 - illustration-zzz.png: [failure reason]
 ```
+
+## Illustration Modification
+
+Support for modifying individual illustrations after initial generation.
+
+### Edit Single Illustration
+
+Regenerate a specific illustration with modified prompt:
+
+1. Identify illustration to edit (e.g., `illustration-concept-overview.png`)
+2. Update prompt in `prompts/illustration-concept-overview.md` if needed
+3. If content changes significantly, update slug in filename
+4. Regenerate image
+5. Update article if image reference changed
+
+### Add New Illustration
+
+Add a new illustration to the article:
+
+1. Identify insertion position in article
+2. Create new prompt with appropriate slug (e.g., `illustration-new-concept.md`)
+3. Generate new illustration image
+4. Update `outline.md` with new illustration entry
+5. Insert image reference in article at the specified position
+
+### Delete Illustration
+
+Remove an illustration from the article:
+
+1. Identify illustration to delete (e.g., `illustration-concept-overview.png`)
+2. Remove image file and prompt file
+3. Remove image reference from article
+4. Update `outline.md` to remove illustration entry
+
+### File Naming Convention
+
+Files use meaningful slugs for better readability:
+```
+illustration-[slug].png
+illustration-[slug].md (in prompts/)
+```
+
+Examples:
+- `illustration-concept-overview.png`
+- `illustration-workflow-diagram.png`
+- `illustration-key-benefits.png`
+
+**Slug rules**:
+- Derived from illustration purpose/content (kebab-case)
+- Must be unique within the article
+- When content changes significantly, update slug accordingly
 
 ## Style Reference Details
 
@@ -325,4 +425,5 @@ Typography: Clean hand-drawn lettering, simple sans-serif labels
 - Maintain selected style consistency across all illustrations in one article
 - Image generation typically takes 10-30 seconds per image
 - Sensitive figures should use cartoon alternatives
-- Prompt and illustration text language should match article language
+- Prompts written in user's confirmed language preference
+- Illustration text (labels, captions) should match article language

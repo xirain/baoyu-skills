@@ -37,7 +37,7 @@ function findComicPages(dir: string): PageInfo[] {
   }
 
   const files = readdirSync(dir);
-  const pagePattern = /^(\d+)-(cover|page)\.(png|jpg|jpeg)$/i;
+  const pagePattern = /^(\d+)-(cover|page)(-[\w-]+)?\.(png|jpg|jpeg)$/i;
   const promptsDir = join(dir, "prompts");
   const hasPrompts = existsSync(promptsDir);
 
@@ -59,7 +59,7 @@ function findComicPages(dir: string): PageInfo[] {
 
   if (pages.length === 0) {
     console.error(`No comic pages found in: ${dir}`);
-    console.error("Expected format: 00-cover.png, 01-page.png, etc.");
+    console.error("Expected format: 00-cover-slug.png, 01-page-slug.png, etc.");
     process.exit(1);
   }
 

@@ -1,23 +1,30 @@
-# Outline Template
+# Storyboard Template
 
-## Outline Document Format
+## Storyboard Document Format
 
 ```markdown
-# [Comic Title] - Knowledge Comic Outline
+---
+title: "[Comic Title]"
+topic: "[topic description]"
+time_span: "[e.g., 1912-1954]"
+narrative_approach: "[chronological/thematic/character-focused]"
+recommended_style: "[style name]"
+recommended_layout: "[layout name or varies]"
+aspect_ratio: "3:4"    # 3:4 (portrait), 4:3 (landscape), 16:9 (widescreen)
+language: "[zh/en/ja/etc.]"
+page_count: [N]
+generated: "YYYY-MM-DD HH:mm"
+---
 
-**Topic**: [topic description]
-**Time Span**: [e.g., 1912-1954]
-**Style**: [selected style]
-**Default Layout**: [selected layout or "varies"]
-**Page Count**: Cover + N pages
+# [Comic Title] - Knowledge Comic Storyboard
+
 **Character Reference**: characters/characters.png
-**Generated**: YYYY-MM-DD HH:mm
 
 ---
 
 ## Cover
 
-**Filename**: 00-cover.png
+**Filename**: 00-cover-[slug].png
 **Core Message**: [one-liner]
 
 **Visual Design**:
@@ -33,7 +40,7 @@
 
 ## Page 1 / N
 
-**Filename**: 01-page.png
+**Filename**: 01-page-[slug].png
 **Layout**: [standard/cinematic/dense/splash/mixed]
 **Narrative Layer**: [Main narrative / Narrator layer / Mixed]
 **Core Message**: [What this page conveys]

@@ -38,6 +38,8 @@ Generate hand-drawn style cover images for articles with multiple style options.
 | Option | Description |
 |--------|-------------|
 | `--style <name>` | Specify cover style (see Style Gallery below) |
+| `--aspect <ratio>` | Aspect ratio: 2.35:1 (cinematic, default), 16:9 (widescreen), 1:1 (social) |
+| `--lang <code>` | Output language for title text (en, zh, ja, etc.) |
 | `--no-title` | Generate cover without title text (visual only) |
 
 ## Style Gallery
@@ -85,34 +87,86 @@ path/to/
     └── cover.png
 ```
 
-### Without Article Path
+### Without Article Path (Pasted Content)
 
-Save to current working directory:
+Save to `cover-outputs/YYYY-MM-DD/[topic-slug]/`:
 
 ```
-./
-├── cover-prompt.md
-└── cover.png
+cover-outputs/
+└── 2026-01-17/
+    └── ai-future/
+        ├── source.md           # Saved pasted content
+        ├── prompts/
+        │   └── cover.md
+        └── cover.png
 ```
 
 ## Workflow
 
 ### Step 1: Analyze Content
 
-Extract key information:
-- **Main topic**: What is the article about?
-- **Core message**: What's the key takeaway?
-- **Tone**: Serious, playful, inspiring, educational?
-- **Keywords**: Identify style-signaling words
+1. **Save source content** (if not already a file):
+   - If user provides a file path: use as-is
+   - If user pastes content: save to `source.md` in target directory
 
-### Step 2: Select Style
+2. **Extract key information**:
+   - **Main topic**: What is the article about?
+   - **Core message**: What's the key takeaway?
+   - **Tone**: Serious, playful, inspiring, educational?
+   - **Keywords**: Identify style-signaling words
 
-If `--style` specified, use that style. Otherwise:
-1. Scan content for style signals (see Auto Style Selection table)
-2. Match signals to most appropriate style
-3. Default to `elegant` if no clear signals
+3. **Language detection**:
+   - Detect **source language** from content
+   - Detect **user language** from conversation context
+   - Note if source_language ≠ user_language (will ask in Step 3)
 
-### Step 3: Generate Cover Concept
+### Step 2: Determine Options
+
+1. **Style selection**:
+   - If `--style` specified, use that style
+   - Otherwise, scan content for style signals and auto-select 3 candidates
+   - Default to `elegant` if no clear signals
+
+2. **Aspect ratio**:
+   - If `--aspect` specified, use that ratio
+   - Otherwise, prepare options: 2.35:1 (cinematic), 16:9 (widescreen), 1:1 (social)
+
+### Step 3: Confirm Options
+
+**Purpose**: Let user confirm all options in a single step before generation.
+
+**IMPORTANT**: Present ALL options in a single confirmation step using AskUserQuestion. Do NOT interrupt workflow with multiple separate confirmations.
+
+**Determine which questions to ask**:
+
+| Question | When to Ask |
+|----------|-------------|
+| Style | Always (required) |
+| Aspect ratio | Always (offer common options) |
+| Language | Only if `source_language ≠ user_language` |
+
+**Present options** (use AskUserQuestion with all applicable questions):
+
+**Question 1 (Style)** - always:
+- Style A (recommended): [style name] - [brief description]
+- Style B: [style name] - [brief description]
+- Style C: [style name] - [brief description]
+- Custom: Provide custom style reference
+
+**Question 2 (Aspect)** - always:
+- 2.35:1 Cinematic (Recommended) - ultra-wide, dramatic
+- 16:9 Widescreen - standard video/presentation
+- 1:1 Square - social media optimized
+
+**Question 3 (Language)** - only if source ≠ user language:
+- [Source language] (matches content)
+- [User language] (your preference)
+
+**Language handling**:
+- If source language = user language: Just inform user (e.g., "Title will be in Chinese")
+- If different: Ask which language to use for title text
+
+### Step 4: Generate Cover Concept
 
 Create a cover image concept based on selected style:
 
@@ -126,21 +180,26 @@ Create a cover image concept based on selected style:
 - 1-2 symbolic elements representing the topic
 - Metaphors or analogies that fit the style
 
-### Step 4: Create Prompt File
+### Step 5: Create Prompt File
+
+Save prompt to `prompts/cover.md` with confirmed options.
+
+**All prompts are written in the user's confirmed language preference.**
 
 **Prompt Format**:
 
 ```markdown
 Cover theme: [topic in 2-3 words]
 Style: [selected style name]
+Aspect ratio: [confirmed aspect ratio]
 
 [If title included:]
-Title text: [8 characters or less, in content language]
-Subtitle: [optional, in content language]
+Title text: [8 characters or less, in confirmed language]
+Subtitle: [optional, in confirmed language]
 
 Visual composition:
 - Main visual: [description matching style]
-- Layout: [positioning based on title inclusion]
+- Layout: [positioning based on title inclusion and aspect ratio]
 - Decorative elements: [style-appropriate elements]
 
 Color scheme:
@@ -154,23 +213,25 @@ Style notes: [specific style characteristics to emphasize]
 Note: No title text, pure visual illustration only.
 ```
 
-### Step 5: Generate Image
+### Step 6: Generate Image
 
 **Image Generation Skill Selection**:
 1. Check available image generation skills
 2. If multiple skills available, ask user to choose
 
 **Generation**:
-Call selected image generation skill with prompt file and output path.
+Call selected image generation skill with prompt file, output path, and confirmed aspect ratio.
 
-### Step 6: Output Summary
+### Step 7: Output Summary
 
 ```
 Cover Image Generated!
 
 Topic: [topic]
 Style: [style name]
+Aspect: [aspect ratio]
 Title: [cover title] (or "No title - visual only")
+Language: [confirmed language]
 Location: [output path]
 
 Preview the image to verify it matches your expectations.
@@ -183,4 +244,5 @@ Preview the image to verify it matches your expectations.
 - Visual metaphors work better than literal representations
 - Maintain style consistency throughout the cover
 - Image generation typically takes 10-30 seconds
-- Title text language should match content language
+- Title text uses user's confirmed language preference
+- Aspect ratio: 2.35:1 for cinematic/dramatic, 16:9 for widescreen, 1:1 for social media
