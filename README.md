@@ -79,6 +79,28 @@ Interacts with Gemini Web to generate text and images.
 /baoyu-danger-gemini-web --promptfiles system.md content.md --image out.png
 ```
 
+### baoyu-danger-x-to-markdown
+
+Converts X (Twitter) content to markdown format. Supports tweet threads and X Articles.
+
+```bash
+# Convert tweet to markdown
+/baoyu-danger-x-to-markdown https://x.com/username/status/123456
+
+# Save to specific file
+/baoyu-danger-x-to-markdown https://x.com/username/status/123456 -o output.md
+
+# JSON output
+/baoyu-danger-x-to-markdown https://x.com/username/status/123456 --json
+```
+
+**Supported URLs:**
+- `https://x.com/<user>/status/<id>`
+- `https://twitter.com/<user>/status/<id>`
+- `https://x.com/i/article/<id>`
+
+**Authentication:** Uses environment variables (`X_AUTH_TOKEN`, `X_CT0`) or Chrome login for cookie-based auth.
+
 ### baoyu-xhs-images
 
 Xiaohongshu (RedNote) infographic series generator. Breaks down content into 1-10 cartoon-style infographics with **Style × Layout** two-dimensional system.
@@ -289,6 +311,17 @@ This skill uses the Gemini Web API (reverse-engineered).
 - First run opens Chrome to authenticate with Google
 - Cookies are cached for subsequent runs
 - No guarantees on API stability or availability
+
+### baoyu-danger-x-to-markdown
+
+This skill uses a reverse-engineered X (Twitter) API.
+
+**Warning:** This is NOT an official API. Use at your own risk.
+
+- May break without notice if X changes their API
+- Account restrictions possible if API usage detected
+- First use requires consent acknowledgment
+- Authentication via environment variables or Chrome login
 
 ## License
 

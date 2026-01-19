@@ -79,6 +79,28 @@ npx add-skill jimliu/baoyu-skills
 /baoyu-danger-gemini-web --promptfiles system.md content.md --image out.png
 ```
 
+### baoyu-danger-x-to-markdown
+
+将 X (Twitter) 内容转换为 markdown 格式。支持推文串和 X 文章。
+
+```bash
+# 将推文转换为 markdown
+/baoyu-danger-x-to-markdown https://x.com/username/status/123456
+
+# 保存到指定文件
+/baoyu-danger-x-to-markdown https://x.com/username/status/123456 -o output.md
+
+# JSON 输出
+/baoyu-danger-x-to-markdown https://x.com/username/status/123456 --json
+```
+
+**支持的 URL：**
+- `https://x.com/<user>/status/<id>`
+- `https://twitter.com/<user>/status/<id>`
+- `https://x.com/i/article/<id>`
+
+**身份验证：** 使用环境变量（`X_AUTH_TOKEN`、`X_CT0`）或 Chrome 登录进行 cookie 认证。
+
 ### baoyu-xhs-images
 
 小红书信息图系列生成器。将内容拆解为 1-10 张卡通风格信息图，支持 **风格 × 布局** 二维系统。
@@ -289,6 +311,17 @@ mkdir -p .baoyu-skills/baoyu-cover-image
 - 首次运行会打开 Chrome 进行 Google 身份验证
 - Cookies 会被缓存供后续使用
 - 不保证 API 的稳定性或可用性
+
+### baoyu-danger-x-to-markdown
+
+此技能使用逆向工程的 X (Twitter) API。
+
+**警告：** 这不是官方 API。使用风险自负。
+
+- 如果 X 更改其 API，可能会无预警失效
+- 如检测到 API 使用，账号可能受限
+- 首次使用需确认免责声明
+- 通过环境变量或 Chrome 登录进行身份验证
 
 ## 许可证
 
