@@ -21,6 +21,7 @@ Post content, images, videos, and long-form articles to X using real Chrome brow
 |--------|---------|
 | `scripts/x-browser.ts` | Regular posts (text + images) |
 | `scripts/x-video.ts` | Video posts (text + video) |
+| `scripts/x-quote.ts` | Quote tweet with comment |
 | `scripts/x-article.ts` | Long-form article publishing (Markdown) |
 | `scripts/md-to-html.ts` | Markdown → HTML conversion |
 | `scripts/copy-to-clipboard.ts` | Copy content to clipboard |
@@ -88,6 +89,28 @@ npx -y bun ${SKILL_DIR}/scripts/x-video.ts "Amazing content" --video ./demo.mp4 
 - X Premium: up to 60 minutes
 - Supported formats: MP4, MOV, WebM
 - Processing time: 30-60 seconds depending on file size
+
+---
+
+## Quote Tweets
+
+Quote an existing tweet with your comment - a way to share content while giving credit to the original creator.
+
+```bash
+# Preview mode (doesn't post)
+npx -y bun ${SKILL_DIR}/scripts/x-quote.ts https://x.com/user/status/123456789 "Great insight!"
+
+# Actually post
+npx -y bun ${SKILL_DIR}/scripts/x-quote.ts https://x.com/user/status/123456789 "I agree!" --submit
+```
+
+**Parameters**:
+| Parameter | Description |
+|-----------|-------------|
+| `<tweet-url>` | URL of the tweet to quote (positional argument) |
+| `<comment>` | Your comment text (positional argument, optional) |
+| `--submit` | Actually post (default: preview only) |
+| `--profile <dir>` | Custom Chrome profile directory |
 
 ---
 
