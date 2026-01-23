@@ -1,197 +1,315 @@
 ---
 name: release-skills
-description: Release workflow for baoyu-skills plugin. Use when user says "release", "发布", "push", "推送", "new version", "新版本", "bump version", "更新版本", or wants to publish changes to remote. Analyzes changes since last tag, updates CHANGELOG (EN/CN), bumps marketplace.json version, commits, and creates version tag. MUST be used before any git push with uncommitted skill changes.
+description: Universal release workflow. Auto-detects version files and changelogs. Supports Node.js, Python, Rust, Claude Plugin, and generic projects. Use when user says "release", "发布", "new version", "bump version", "push", "推送".
 ---
 
 # Release Skills
 
-Automate the release process for baoyu-skills plugin: analyze changes, update changelogs, bump version, commit, and tag.
+Universal release workflow supporting any project type with multi-language changelog.
 
-## CRITICAL: Mandatory Release Checklist
+## Quick Start
 
-**NEVER skip these steps when releasing:**
+Just run `/release-skills` - auto-detects your project configuration.
 
-1. ✅ Update `CHANGELOG.md` (English)
-2. ✅ Update `CHANGELOG.zh.md` (Chinese)
-3. ✅ Update `marketplace.json` version
-4. ✅ Update `README.md` / `README.zh.md` if needed
-5. ✅ Commit all changes together
-6. ✅ Create version tag
+## Supported Projects
 
-**If user says "直接 push" or "just push" - STILL follow all steps above first!**
-
-## When to Use
-
-Trigger this skill when user requests:
-- "release", "发布", "create release", "new version"
-- "bump version", "update version"
-- "prepare release"
-- "push to remote" (with uncommitted changes)
-
-## Workflow
-
-### Step 1: Analyze Changes Since Last Tag
-
-```bash
-# Get the latest version tag
-LAST_TAG=$(git tag --sort=-v:refname | head -1)
-
-# Show changes since last tag
-git log ${LAST_TAG}..HEAD --oneline
-git diff ${LAST_TAG}..HEAD --stat
-```
-
-Categorize changes by type based on commit messages and file changes:
-
-| Type | Prefix | Description |
-|------|--------|-------------|
-| feat | `feat:` | New features, new skills |
-| fix | `fix:` | Bug fixes |
-| docs | `docs:` | Documentation only |
-| refactor | `refactor:` | Code refactoring |
-| style | `style:` | Formatting, styling |
-| chore | `chore:` | Build, tooling, maintenance |
-
-**Breaking Change Detection**: If changes include:
-- Removed skills or scripts
-- Changed API/interfaces
-- Renamed public functions/options
-
-Warn user: "Breaking changes detected. Consider major version bump (--major flag)."
-
-### Step 2: Determine Version Bump
-
-Current version location: `.claude-plugin/marketplace.json` → `metadata.version`
-
-Version rules:
-- **Patch** (0.6.1 → 0.6.2): Bug fixes, docs updates, minor improvements
-- **Minor** (0.6.x → 0.7.0): New features, new skills, significant enhancements
-- **Major** (0.x → 1.0): Breaking changes, only when user explicitly requests with `--major`
-
-Default behavior:
-- If changes include `feat:` or new skills → Minor bump
-- Otherwise → Patch bump
-
-### Step 3: Check and Update README
-
-Before updating changelogs, check if README files need updates based on changes:
-
-**When to update README**:
-- New skills added → Add to skill list
-- Skills removed → Remove from skill list
-- Skill renamed → Update references
-- New features affecting usage → Update usage section
-- Breaking changes → Update migration notes
-
-**Files to sync**:
-- `README.md` (English)
-- `README.zh.md` (Chinese)
-
-If changes include new skills or significant feature changes, update both README files to reflect the new capabilities. Keep both files in sync with the same structure and information.
-
-### Step 4: Update Changelogs
-
-Files to update:
-- `CHANGELOG.md` (English)
-- `CHANGELOG.zh.md` (Chinese)
-
-Format (insert after header, before previous version):
-
-```markdown
-## {NEW_VERSION} - {YYYY-MM-DD}
-
-### Features
-- `skill-name`: description of new feature
-
-### Fixes
-- `skill-name`: description of fix
-
-### Documentation
-- description of docs changes
-
-### Other
-- description of other changes
-```
-
-Only include sections that have changes. Omit empty sections.
-
-For Chinese changelog, translate the content maintaining the same structure.
-
-### Step 5: Update marketplace.json
-
-Update `.claude-plugin/marketplace.json`:
-```json
-{
-  "metadata": {
-    "version": "{NEW_VERSION}"
-  }
-}
-```
-
-### Step 6: Commit Changes
-
-```bash
-git add README.md README.zh.md CHANGELOG.md CHANGELOG.zh.md .claude-plugin/marketplace.json
-git commit -m "chore: release v{NEW_VERSION}"
-```
-
-**Note**: Do NOT add Co-Authored-By line. This is a release commit, not a code contribution.
-
-### Step 7: Create Version Tag
-
-```bash
-git tag v{NEW_VERSION}
-```
-
-**Important**: Do NOT push to remote. User will push manually when ready.
+| Project Type | Version File | Auto-Detected |
+|--------------|--------------|---------------|
+| Node.js | package.json | ✓ |
+| Python | pyproject.toml | ✓ |
+| Rust | Cargo.toml | ✓ |
+| Claude Plugin | marketplace.json | ✓ |
+| Generic | VERSION / version.txt | ✓ |
 
 ## Options
 
 | Flag | Description |
 |------|-------------|
-| `--dry-run` | Preview changes without executing. Show what would be updated. |
-| `--major` | Force major version bump (0.x → 1.0 or 1.x → 2.0) |
+| `--dry-run` | Preview changes without executing |
+| `--major` | Force major version bump |
 | `--minor` | Force minor version bump |
 | `--patch` | Force patch version bump |
-| `--pre <tag>` | (Reserved) Create pre-release version, e.g., `--pre beta` → `0.7.0-beta.1` |
+
+## Workflow
+
+### Step 1: Detect Project Configuration
+
+1. Check for `.releaserc.yml` (optional config override)
+2. Auto-detect version file by scanning (priority order):
+   - `package.json` (Node.js)
+   - `pyproject.toml` (Python)
+   - `Cargo.toml` (Rust)
+   - `marketplace.json` or `.claude-plugin/marketplace.json` (Claude Plugin)
+   - `VERSION` or `version.txt` (Generic)
+3. Scan for changelog files using glob patterns:
+   - `CHANGELOG*.md`
+   - `HISTORY*.md`
+   - `CHANGES*.md`
+4. Identify language of each changelog by filename suffix
+5. Display detected configuration
+
+**Language Detection Rules**:
+
+| Filename Pattern | Language |
+|------------------|----------|
+| `CHANGELOG.md` (no suffix) | en (default) |
+| `CHANGELOG.zh.md` / `CHANGELOG_CN.md` / `CHANGELOG.zh-CN.md` | zh |
+| `CHANGELOG.ja.md` / `CHANGELOG_JP.md` | ja |
+| `CHANGELOG.ko.md` / `CHANGELOG_KR.md` | ko |
+| `CHANGELOG.de.md` / `CHANGELOG_DE.md` | de |
+| `CHANGELOG.fr.md` / `CHANGELOG_FR.md` | fr |
+| `CHANGELOG.es.md` / `CHANGELOG_ES.md` | es |
+| `CHANGELOG.{lang}.md` | Corresponding language code |
+
+**Output Example**:
+```
+Project detected:
+  Version file: package.json (1.2.3)
+  Changelogs:
+    - CHANGELOG.md (en)
+    - CHANGELOG.zh.md (zh)
+    - CHANGELOG.ja.md (ja)
+```
+
+### Step 2: Analyze Changes Since Last Tag
+
+```bash
+LAST_TAG=$(git tag --sort=-v:refname | head -1)
+git log ${LAST_TAG}..HEAD --oneline
+git diff ${LAST_TAG}..HEAD --stat
+```
+
+Categorize by conventional commit types:
+
+| Type | Description |
+|------|-------------|
+| feat | New features |
+| fix | Bug fixes |
+| docs | Documentation |
+| refactor | Code refactoring |
+| perf | Performance improvements |
+| test | Test changes |
+| style | Formatting, styling |
+| chore | Maintenance (skip in changelog) |
+
+**Breaking Change Detection**:
+- Commit message starts with `BREAKING CHANGE`
+- Commit body/footer contains `BREAKING CHANGE:`
+- Removed public APIs, renamed exports, changed interfaces
+
+If breaking changes detected, warn user: "Breaking changes detected. Consider major version bump (--major flag)."
+
+### Step 3: Determine Version Bump
+
+Rules (in priority order):
+1. User flag `--major/--minor/--patch` → Use specified
+2. BREAKING CHANGE detected → Major bump (1.x.x → 2.0.0)
+3. `feat:` commits present → Minor bump (1.2.x → 1.3.0)
+4. Otherwise → Patch bump (1.2.3 → 1.2.4)
+
+Display version change: `1.2.3 → 1.3.0`
+
+### Step 4: Generate Multi-language Changelogs
+
+For each detected changelog file:
+
+1. **Identify language** from filename suffix
+2. **Generate content in that language**:
+   - Section titles in target language
+   - Change descriptions written naturally in target language (not translated)
+   - Date format: YYYY-MM-DD (universal)
+3. **Insert at file head** (preserve existing content)
+
+**Section Title Translations** (built-in):
+
+| Type | en | zh | ja | ko | de | fr | es |
+|------|----|----|----|----|----|----|-----|
+| feat | Features | 新功能 | 新機能 | 새로운 기능 | Funktionen | Fonctionnalités | Características |
+| fix | Fixes | 修复 | 修正 | 수정 | Fehlerbehebungen | Corrections | Correcciones |
+| docs | Documentation | 文档 | ドキュメント | 문서 | Dokumentation | Documentation | Documentación |
+| refactor | Refactor | 重构 | リファクタリング | 리팩토링 | Refactoring | Refactorisation | Refactorización |
+| perf | Performance | 性能优化 | パフォーマンス | 성능 | Leistung | Performance | Rendimiento |
+| breaking | Breaking Changes | 破坏性变更 | 破壊的変更 | 주요 변경사항 | Breaking Changes | Changements majeurs | Cambios importantes |
+
+**Changelog Format**:
+
+```markdown
+## {VERSION} - {YYYY-MM-DD}
+
+### Features
+- Description of new feature
+
+### Fixes
+- Description of fix
+
+### Documentation
+- Description of docs changes
+```
+
+Only include sections that have changes. Omit empty sections.
+
+**Multi-language Example**:
+
+English (CHANGELOG.md):
+```markdown
+## 1.3.0 - 2026-01-22
+
+### Features
+- Add user authentication module
+- Support OAuth2 login
+
+### Fixes
+- Fix memory leak in connection pool
+```
+
+Chinese (CHANGELOG.zh.md):
+```markdown
+## 1.3.0 - 2026-01-22
+
+### 新功能
+- 新增用户认证模块
+- 支持 OAuth2 登录
+
+### 修复
+- 修复连接池内存泄漏问题
+```
+
+Japanese (CHANGELOG.ja.md):
+```markdown
+## 1.3.0 - 2026-01-22
+
+### 新機能
+- ユーザー認証モジュールを追加
+- OAuth2 ログインをサポート
+
+### 修正
+- コネクションプールのメモリリークを修正
+```
+
+### Step 5: Update Version File
+
+1. Read version file (JSON/TOML/text)
+2. Update version number
+3. Write back (preserve formatting)
+
+**Version Paths by File Type**:
+
+| File | Path |
+|------|------|
+| package.json | `$.version` |
+| pyproject.toml | `project.version` |
+| Cargo.toml | `package.version` |
+| marketplace.json | `$.metadata.version` |
+| VERSION / version.txt | Direct content |
+
+### Step 6: Commit and Tag
+
+```bash
+git add <all modified files>
+git commit -m "chore: release v{VERSION}"
+git tag v{VERSION}
+```
+
+**Note**: Do NOT add Co-Authored-By line. This is a release commit, not a code contribution.
+
+**Important**: Do NOT push to remote. User will push manually when ready.
+
+**Post-Release Output**:
+```
+Release v1.3.0 created locally.
+
+To publish:
+  git push origin main
+  git push origin v1.3.0
+```
+
+## Configuration (.releaserc.yml)
+
+Optional config file in project root to override defaults:
+
+```yaml
+# .releaserc.yml - Optional configuration
+
+# Version file (auto-detected if not specified)
+version:
+  file: package.json
+  path: $.version  # JSONPath for JSON, dotted path for TOML
+
+# Changelog files (auto-detected if not specified)
+changelog:
+  files:
+    - path: CHANGELOG.md
+      lang: en
+    - path: CHANGELOG.zh.md
+      lang: zh
+    - path: CHANGELOG.ja.md
+      lang: ja
+
+  # Section mapping (conventional commit type → changelog section)
+  # Use null to skip a type in changelog
+  sections:
+    feat: Features
+    fix: Fixes
+    docs: Documentation
+    refactor: Refactor
+    perf: Performance
+    test: Tests
+    chore: null
+
+# Commit message format
+commit:
+  message: "chore: release v{version}"
+
+# Tag format
+tag:
+  prefix: v  # Results in v1.0.0
+  sign: false
+
+# Additional files to include in release commit
+include:
+  - README.md
+  - package.json
+```
 
 ## Dry-Run Mode
 
 When `--dry-run` is specified:
-1. Show all changes since last tag
-2. Show proposed version bump (current → new)
-3. Show draft changelog entries (EN and CN)
-4. Show files that would be modified
-5. Do NOT make any actual changes
 
-Output format:
 ```
 === DRY RUN MODE ===
 
-Last tag: v0.6.1
-Proposed version: v0.7.0
+Project detected:
+  Version file: package.json (1.2.3)
+  Changelogs: CHANGELOG.md (en), CHANGELOG.zh.md (zh)
+
+Last tag: v1.2.3
+Proposed version: v1.3.0
 
 Changes detected:
-- feat: new skill baoyu-foo added
-- fix: baoyu-bar timeout issue
-- docs: updated README
+  feat: add user authentication
+  feat: support oauth2 login
+  fix: memory leak in pool
 
-Changelog preview (EN):
-## 0.7.0 - 2026-01-17
-### Features
-- `baoyu-foo`: new skill for ...
-### Fixes
-- `baoyu-bar`: fixed timeout issue
+Changelog preview (en):
+  ## 1.3.0 - 2026-01-22
+  ### Features
+  - Add user authentication module
+  - Support OAuth2 login
+  ### Fixes
+  - Fix memory leak in connection pool
 
-README updates needed: Yes/No
-(If yes, show proposed changes)
+Changelog preview (zh):
+  ## 1.3.0 - 2026-01-22
+  ### 新功能
+  - 新增用户认证模块
+  - 支持 OAuth2 登录
+  ### 修复
+  - 修复连接池内存泄漏问题
 
 Files to modify:
-- README.md (if updates needed)
-- README.zh.md (if updates needed)
-- CHANGELOG.md
-- CHANGELOG.zh.md
-- .claude-plugin/marketplace.json
+  - package.json
+  - CHANGELOG.md
+  - CHANGELOG.zh.md
 
 No changes made. Run without --dry-run to execute.
 ```
@@ -202,16 +320,16 @@ No changes made. Run without --dry-run to execute.
 /release-skills              # Auto-detect version bump
 /release-skills --dry-run    # Preview only
 /release-skills --minor      # Force minor bump
+/release-skills --patch      # Force patch bump
 /release-skills --major      # Force major bump (with confirmation)
 ```
 
-## Post-Release Reminder
+## When to Use
 
-After successful release, remind user:
-```
-Release v{NEW_VERSION} created locally.
+Trigger this skill when user requests:
+- "release", "发布", "create release", "new version", "新版本"
+- "bump version", "update version", "更新版本"
+- "prepare release"
+- "push to remote" (with uncommitted changes)
 
-To publish:
-  git push origin main
-  git push origin v{NEW_VERSION}
-```
+**Important**: If user says "just push" or "直接 push" with uncommitted changes, STILL follow all steps above first.

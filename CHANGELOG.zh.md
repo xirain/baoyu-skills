@@ -2,6 +2,11 @@
 
 [English](./CHANGELOG.md) | 中文
 
+## 1.15.2 - 2026-01-23
+
+### 文档
+- `release-skills`：SKILL.md 全面重写——新增多语言 changelog 支持、.releaserc.yml 配置文件、dry-run 模式、语言检测规则、7 种语言的章节标题翻译。
+
 ## 1.15.1 - 2026-01-22
 
 ### 重构

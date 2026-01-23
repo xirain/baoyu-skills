@@ -2,6 +2,11 @@
 
 English | [中文](./CHANGELOG.zh.md)
 
+## 1.15.2 - 2026-01-23
+
+### Documentation
+- `release-skills`: comprehensive SKILL.md rewrite—adds multi-language changelog support, .releaserc.yml configuration, dry-run mode, language detection rules, and section title translations for 7 languages.
+
 ## 1.15.1 - 2026-01-22
 
 ### Refactor
