@@ -2,6 +2,13 @@
 
 [English](./CHANGELOG.md) | 中文
 
+## 1.25.0 - 2026-01-28
+
+### 新功能
+- `baoyu-format-markdown`：新增 markdown 格式化技能，支持 frontmatter、排版优化和中英文空格处理。
+- `baoyu-markdown-to-html`：新增 markdown 转 HTML 技能，支持微信兼容主题、代码高亮、数学公式、PlantUML 和 alerts。
+- `baoyu-post-to-wechat`：新增 API 发布方式和外部主题支持。
+
 ## 1.24.4 - 2026-01-28
 
 ### 修复

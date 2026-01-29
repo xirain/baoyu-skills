@@ -2,6 +2,13 @@
 
 English | [中文](./CHANGELOG.zh.md)
 
+## 1.25.0 - 2026-01-28
+
+### Features
+- `baoyu-format-markdown`: add markdown formatter skill with frontmatter, typography, and CJK spacing support.
+- `baoyu-markdown-to-html`: add markdown to HTML converter with WeChat-compatible themes, code highlighting, math, PlantUML, and alerts.
+- `baoyu-post-to-wechat`: add API-based publishing method and external theme support.
+
 ## 1.24.4 - 2026-01-28
 
 ### Fixes
