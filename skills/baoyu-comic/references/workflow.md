@@ -84,6 +84,7 @@ Read source content, save it if needed, and perform deep analysis.
 1. **Save source content** (if not already a file):
    - If user provides a file path: use as-is
    - If user pastes content: save to `source.md` in target directory
+   - **Backup rule**: If `source.md` exists, rename to `source-backup-YYYYMMDD-HHMMSS.md`
 2. Read source content
 3. **Deep analysis** following `analysis-framework.md`:
    - Target audience identification
@@ -329,6 +330,7 @@ Create image generation prompts for all pages.
 1. Create prompt following art style + tone guidelines
 2. Include character visual descriptions for consistency
 3. Save to `prompts/NN-{cover|page}-[slug].md`
+   - **Backup rule**: If prompt file exists, rename to `prompts/NN-{cover|page}-[slug]-backup-YYYYMMDD-HHMMSS.md`
 
 **Prompt File Format**:
 ```markdown
@@ -405,8 +407,9 @@ With confirmed prompts from Step 5/6:
 ### 7.1 Generate Character Reference Sheet (first)
 
 1. Use Reference Sheet Prompt from `characters/characters.md`
-2. Generate → `characters/characters.png`
-3. This ensures visual consistency for all subsequent pages
+2. **Backup rule**: If `characters/characters.png` exists, rename to `characters/characters-backup-YYYYMMDD-HHMMSS.png`
+3. Generate → `characters/characters.png`
+4. This ensures visual consistency for all subsequent pages
 
 ### 7.2 Generate Comic Pages
 
@@ -453,9 +456,10 @@ When skill does NOT support reference images, create combined prompt files:
 
 **For each page (cover + pages)**:
 1. Read prompt from `prompts/NN-{cover|page}-[slug].md`
-2. Generate image using Strategy A or B (based on skill capability)
-3. Save to `NN-{cover|page}-[slug].png`
-4. Report progress after each generation: "Generated X/N: [page title]"
+2. **Backup rule**: If image file exists, rename to `NN-{cover|page}-[slug]-backup-YYYYMMDD-HHMMSS.png`
+3. Generate image using Strategy A or B (based on skill capability)
+4. Save to `NN-{cover|page}-[slug].png`
+5. Report progress after each generation: "Generated X/N: [page title]"
 
 **Session Management**:
 If image generation skill supports `--sessionId`:

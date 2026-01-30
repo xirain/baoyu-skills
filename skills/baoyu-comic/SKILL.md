@@ -194,6 +194,7 @@ Input → Preferences → Analyze → [Check Existing?] → [Confirm: Style + Re
 **Character reference is MANDATORY for visual consistency.**
 
 **7.1 Generate character sheet first**:
+- **Backup rule**: If `characters/characters.png` exists, rename to `characters/characters-backup-YYYYMMDD-HHMMSS.png`
 ```bash
 # Use Reference Sheet Prompt from characters/characters.md
 npx -y bun ${SKILL_DIR}/../baoyu-image-gen/scripts/main.ts \
@@ -213,6 +214,10 @@ Compress to reduce token usage when used as reference image:
 |------------------|----------|
 | Supports `--ref` | Pass `characters/characters.png` with EVERY page |
 | No `--ref` support | Prepend character descriptions to EVERY prompt file |
+
+**Backup rules for page generation**:
+- If prompt file exists: rename to `prompts/NN-{cover|page}-[slug]-backup-YYYYMMDD-HHMMSS.md`
+- If image file exists: rename to `NN-{cover|page}-[slug]-backup-YYYYMMDD-HHMMSS.png`
 
 ```bash
 # Example: ALWAYS include --ref for consistency
