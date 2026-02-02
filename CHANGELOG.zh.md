@@ -2,6 +2,11 @@
 
 [English](./CHANGELOG.md) | 中文
 
+## 1.28.1 - 2026-02-02
+
+### 重构
+- `baoyu-article-illustrator`：简化主 SKILL.md，将详细步骤提取到 `workflow.md`；新增 Core Styles 快速选择层（vector、minimal-flat、sci-fi、hand-drawn、editorial、scene）；新增 `vector-illustration` 作为推荐默认风格；新增插图目的（information/visualization/imagination）以优化类型/风格推荐；在提示词构建中新增默认构图要求、人物渲染指南和文本样式规则。
+
 ## 1.28.0 - 2026-02-01
 
 ### 新功能

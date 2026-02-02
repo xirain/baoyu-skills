@@ -2,6 +2,11 @@
 
 English | [中文](./CHANGELOG.zh.md)
 
+## 1.28.1 - 2026-02-02
+
+### Refactor
+- `baoyu-article-illustrator`: simplify main SKILL.md by extracting detailed procedures to `workflow.md`; add Core Styles tier (vector, minimal-flat, sci-fi, hand-drawn, editorial, scene) for quick selection; add `vector-illustration` as recommended default style; add Illustration Purpose (information/visualization/imagination) for better type/style recommendations; add default composition requirements, character rendering guidelines, and text styling rules to prompt construction.
+
 ## 1.28.0 - 2026-02-01
 
 ### Features
