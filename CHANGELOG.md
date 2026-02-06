@@ -2,6 +2,11 @@
 
 English | [中文](./CHANGELOG.zh.md)
 
+## 1.30.3 - 2026-02-06
+
+### Refactor
+- `baoyu-article-illustrator`: optimize SKILL.md from 197 to 150 lines (24% reduction); apply progressive disclosure pattern with concise overview and detailed references.
+
 ## 1.30.2 - 2026-02-06
 
 ### Refactor
