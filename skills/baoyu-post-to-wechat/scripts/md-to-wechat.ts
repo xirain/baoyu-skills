@@ -115,10 +115,11 @@ function parseFrontmatter(content: string): { frontmatter: Record<string, string
   return { frontmatter, body: match[2]! };
 }
 
-export async function convertMarkdown(markdownPath: string, options?: { title?: string; theme?: string }): Promise<ParsedResult> {
+export async function convertMarkdown(markdownPath: string, options?: { title?: string; theme?: string; localTemp?: boolean }): Promise<ParsedResult> {
   const baseDir = path.dirname(markdownPath);
   const content = fs.readFileSync(markdownPath, 'utf-8');
   const theme = options?.theme ?? 'default';
+  const useLocalTemp = options?.localTemp ?? false;
 
   const { frontmatter, body } = parseFrontmatter(content);
 
@@ -182,7 +183,14 @@ export async function convertMarkdown(markdownPath: string, options?: { title?: 
 
   const modifiedMarkdown = `---\n${Object.entries(frontmatter).map(([k, v]) => `${k}: ${v}`).join('\n')}\n---\n${modifiedBody}`;
 
-  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'wechat-article-images-'));
+  // Use local temp directory (next to md file) or system temp
+  const tempDir = useLocalTemp
+    ? await (async () => {
+        const localTempDir = path.join(baseDir, 'temp');
+        await mkdir(localTempDir, { recursive: true });
+        return localTempDir;
+      })()
+    : fs.mkdtempSync(path.join(os.tmpdir(), 'wechat-article-images-'));
   const tempMdPath = path.join(tempDir, 'temp-article.md');
   await writeFile(tempMdPath, modifiedMarkdown, 'utf-8');
 
@@ -235,6 +243,7 @@ Usage:
 Options:
   --title <title>     Override title
   --theme <name>      Theme name (default, grace, simple)
+  --localtemp         Save temp files to 'temp' folder next to the markdown file
   --help              Show this help
 
 Output JSON format:
@@ -266,6 +275,7 @@ async function main(): Promise<void> {
   let markdownPath: string | undefined;
   let title: string | undefined;
   let theme: string | undefined;
+  let localTemp = false;
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i]!;
@@ -273,6 +283,8 @@ async function main(): Promise<void> {
       title = args[++i];
     } else if (arg === '--theme' && args[i + 1]) {
       theme = args[++i];
+    } else if (arg === '--localtemp') {
+      localTemp = true;
     } else if (!arg.startsWith('-')) {
       markdownPath = arg;
     }
@@ -293,7 +305,7 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  const result = await convertMarkdown(resolvedMarkdownPath, { title, theme });
+  const result = await convertMarkdown(resolvedMarkdownPath, { title, theme, localTemp });
   console.log(JSON.stringify(result, null, 2));
 }
 

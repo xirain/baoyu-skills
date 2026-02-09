@@ -228,25 +228,27 @@ async function copyHtmlLinux(htmlFilePath: string): Promise<void> {
 }
 
 async function copyImageWindows(imagePath: string): Promise<void> {
+  // Escape the path for PowerShell (handle spaces and special chars)
+  const escapedPath = imagePath.replace(/'/g, "''");
   const ps = [
-    'param([string]$Path)',
     'Add-Type -AssemblyName System.Windows.Forms',
     'Add-Type -AssemblyName System.Drawing',
-    '$img = [System.Drawing.Image]::FromFile($Path)',
+    `$img = [System.Drawing.Image]::FromFile('${escapedPath}')`,
     '[System.Windows.Forms.Clipboard]::SetImage($img)',
     '$img.Dispose()',
   ].join('; ');
-  await runCommand('powershell.exe', ['-NoProfile', '-Sta', '-Command', ps, '-Path', imagePath]);
+  await runCommand('powershell.exe', ['-NoProfile', '-Sta', '-Command', ps]);
 }
 
 async function copyHtmlWindows(htmlFilePath: string): Promise<void> {
+  // Escape the path for PowerShell (handle spaces and special chars)
+  const escapedPath = htmlFilePath.replace(/'/g, "''");
   const ps = [
-    'param([string]$Path)',
     'Add-Type -AssemblyName System.Windows.Forms',
-    '$html = Get-Content -Raw -LiteralPath $Path',
+    `$html = Get-Content -Raw -LiteralPath '${escapedPath}'`,
     '[System.Windows.Forms.Clipboard]::SetText($html, [System.Windows.Forms.TextDataFormat]::Html)',
   ].join('; ');
-  await runCommand('powershell.exe', ['-NoProfile', '-Sta', '-Command', ps, '-Path', htmlFilePath]);
+  await runCommand('powershell.exe', ['-NoProfile', '-Sta', '-Command', ps]);
 }
 
 async function copyImageToClipboard(imagePathInput: string): Promise<void> {

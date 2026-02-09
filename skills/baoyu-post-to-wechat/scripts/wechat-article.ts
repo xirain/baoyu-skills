@@ -26,6 +26,7 @@ interface ArticleOptions {
   submit?: boolean;
   profileDir?: string;
   cdpPort?: number;
+  localTemp?: boolean;
 }
 
 async function waitForLogin(session: ChromeSession, timeoutMs = 120_000): Promise<boolean> {
@@ -183,12 +184,13 @@ async function pasteFromClipboardInEditor(session: ChromeSession): Promise<void>
   await sleep(1000);
 }
 
-async function parseMarkdownWithPlaceholders(markdownPath: string, theme?: string): Promise<{ title: string; author: string; summary: string; htmlPath: string; contentImages: ImageInfo[] }> {
+async function parseMarkdownWithPlaceholders(markdownPath: string, theme?: string, localTemp?: boolean): Promise<{ title: string; author: string; summary: string; htmlPath: string; contentImages: ImageInfo[] }> {
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = path.dirname(__filename);
   const mdToWechatScript = path.join(__dirname, 'md-to-wechat.ts');
   const args = ['-y', 'bun', mdToWechatScript, markdownPath];
   if (theme) args.push('--theme', theme);
+  if (localTemp) args.push('--localtemp');
 
   const result = spawnSync('npx', args, { stdio: ['inherit', 'pipe', 'pipe'] });
   if (result.status !== 0) {
@@ -383,7 +385,7 @@ async function removeExtraEmptyLineAfterImage(session: ChromeSession): Promise<b
 }
 
 export async function postArticle(options: ArticleOptions): Promise<void> {
-  const { title, content, htmlFile, markdownFile, theme, author, summary, images = [], submit = false, profileDir, cdpPort } = options;
+  const { title, content, htmlFile, markdownFile, theme, author, summary, images = [], submit = false, profileDir, cdpPort, localTemp } = options;
   let { contentImages = [] } = options;
   let effectiveTitle = title || '';
   let effectiveAuthor = author || '';
@@ -392,7 +394,7 @@ export async function postArticle(options: ArticleOptions): Promise<void> {
 
   if (markdownFile) {
     console.log(`[wechat] Parsing markdown: ${markdownFile}`);
-    const parsed = await parseMarkdownWithPlaceholders(markdownFile, theme);
+    const parsed = await parseMarkdownWithPlaceholders(markdownFile, theme, localTemp);
     effectiveTitle = effectiveTitle || parsed.title;
     effectiveAuthor = effectiveAuthor || parsed.author;
     effectiveSummary = effectiveSummary || parsed.summary;
@@ -682,10 +684,12 @@ Options:
   --submit           Save as draft
   --profile <dir>    Chrome profile directory
   --cdp-port <port>  Connect to existing Chrome debug port instead of launching new instance
+  --localtemp        Save temp files to 'temp' folder next to the markdown file
 
 Examples:
   npx -y bun wechat-article.ts --markdown article.md
   npx -y bun wechat-article.ts --markdown article.md --theme grace --submit
+  npx -y bun wechat-article.ts --markdown article.md --localtemp
   npx -y bun wechat-article.ts --title "标题" --content "内容" --image img.png
   npx -y bun wechat-article.ts --title "标题" --html article.html --submit
 
@@ -712,6 +716,7 @@ async function main(): Promise<void> {
   let submit = false;
   let profileDir: string | undefined;
   let cdpPort: number | undefined;
+  let localTemp = false;
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i]!;
@@ -726,12 +731,13 @@ async function main(): Promise<void> {
     else if (arg === '--submit') submit = true;
     else if (arg === '--profile' && args[i + 1]) profileDir = args[++i];
     else if (arg === '--cdp-port' && args[i + 1]) cdpPort = parseInt(args[++i]!, 10);
+    else if (arg === '--localtemp') localTemp = true;
   }
 
   if (!markdownFile && !htmlFile && !title) { console.error('Error: --title is required (or use --markdown/--html)'); process.exit(1); }
   if (!markdownFile && !htmlFile && !content) { console.error('Error: --content, --html, or --markdown is required'); process.exit(1); }
 
-  await postArticle({ title: title || '', content, htmlFile, markdownFile, theme, author, summary, images, submit, profileDir, cdpPort });
+  await postArticle({ title: title || '', content, htmlFile, markdownFile, theme, author, summary, images, submit, profileDir, cdpPort, localTemp });
 }
 
 await main().then(() => {
