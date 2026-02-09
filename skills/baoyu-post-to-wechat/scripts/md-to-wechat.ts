@@ -171,6 +171,10 @@ export async function convertMarkdown(markdownPath: string, options?: { title?: 
   let imageCounter = 0;
 
   const modifiedBody = bodyWithoutTitle.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, src) => {
+    // Skip HTTP/HTTPS URLs - keep them as-is in the markdown (no local replacement needed)
+    if (src.startsWith('http://') || src.startsWith('https://')) {
+      return match;
+    }
     const placeholder = `WECHATIMGPH_${++imageCounter}`;
     images.push({ src, placeholder });
     return placeholder;
