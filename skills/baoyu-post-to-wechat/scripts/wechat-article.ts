@@ -117,7 +117,9 @@ async function sendPaste(cdp?: CdpConnection, sessionId?: string): Promise<void>
 
 async function copyHtmlFromBrowser(cdp: CdpConnection, htmlFilePath: string, contentImages: ImageInfo[] = []): Promise<void> {
   const absolutePath = path.isAbsolute(htmlFilePath) ? htmlFilePath : path.resolve(process.cwd(), htmlFilePath);
-  const fileUrl = `file://${absolutePath}`;
+  // Windows needs file:/// with forward slashes
+  const normalizedPath = absolutePath.replace(/\\/g, '/');
+  const fileUrl = process.platform === 'win32' ? `file:///${normalizedPath}` : `file://${absolutePath}`;
 
   console.log(`[wechat] Opening HTML file in new tab: ${fileUrl}`);
 

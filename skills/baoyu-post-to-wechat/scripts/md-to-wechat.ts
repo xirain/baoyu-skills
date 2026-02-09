@@ -72,23 +72,26 @@ function getImageExtension(urlOrPath: string): string {
 }
 
 async function resolveImagePath(imagePath: string, baseDir: string, tempDir: string): Promise<string> {
-  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
-    const hash = createHash('md5').update(imagePath).digest('hex').slice(0, 8);
-    const ext = getImageExtension(imagePath);
+  // Decode URL-encoded characters (e.g., %E8%93%AC -> 蓬)
+  const decodedPath = decodeURIComponent(imagePath);
+
+  if (decodedPath.startsWith('http://') || decodedPath.startsWith('https://')) {
+    const hash = createHash('md5').update(decodedPath).digest('hex').slice(0, 8);
+    const ext = getImageExtension(decodedPath);
     const localPath = path.join(tempDir, `remote_${hash}.${ext}`);
 
     if (!fs.existsSync(localPath)) {
-      console.error(`[md-to-wechat] Downloading: ${imagePath}`);
-      await downloadFile(imagePath, localPath);
+      console.error(`[md-to-wechat] Downloading: ${decodedPath}`);
+      await downloadFile(decodedPath, localPath);
     }
     return localPath;
   }
 
-  if (path.isAbsolute(imagePath)) {
-    return imagePath;
+  if (path.isAbsolute(decodedPath)) {
+    return decodedPath;
   }
 
-  return path.resolve(baseDir, imagePath);
+  return path.resolve(baseDir, decodedPath);
 }
 
 function parseFrontmatter(content: string): { frontmatter: Record<string, string>; body: string } {
@@ -276,12 +279,17 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  if (!fs.existsSync(markdownPath)) {
-    console.error(`Error: File not found: ${markdownPath}`);
+  // Resolve relative paths based on current working directory
+  const resolvedMarkdownPath = path.isAbsolute(markdownPath)
+    ? markdownPath
+    : path.resolve(process.cwd(), markdownPath);
+
+  if (!fs.existsSync(resolvedMarkdownPath)) {
+    console.error(`Error: File not found: ${resolvedMarkdownPath}`);
     process.exit(1);
   }
 
-  const result = await convertMarkdown(markdownPath, { title, theme });
+  const result = await convertMarkdown(resolvedMarkdownPath, { title, theme });
   console.log(JSON.stringify(result, null, 2));
 }
 
