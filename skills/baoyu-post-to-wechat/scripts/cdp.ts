@@ -220,7 +220,8 @@ export async function launchChrome(url: string, profileDir?: string): Promise<{ 
     '--disable-blink-features=AutomationControlled',
     '--start-maximized',
     url,
-  ], { stdio: 'ignore' });
+  ], { stdio: 'ignore', detached: true });
+  chrome.unref();
 
   const wsUrl = await waitForChromeDebugPort(port, 30_000);
   const cdp = await CdpConnection.connect(wsUrl, 30_000);

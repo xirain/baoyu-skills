@@ -345,7 +345,8 @@ export async function postToWeChat(options: WeChatBrowserOptions): Promise<void>
     '--disable-blink-features=AutomationControlled',
     '--start-maximized',
     WECHAT_URL,
-  ], { stdio: 'ignore' });
+  ], { stdio: 'ignore', detached: true });
+  chrome.unref();
 
   let cdp: CdpConnection | null = null;
 
