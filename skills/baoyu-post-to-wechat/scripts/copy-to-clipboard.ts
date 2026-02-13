@@ -228,7 +228,6 @@ async function copyHtmlLinux(htmlFilePath: string): Promise<void> {
 }
 
 async function copyImageWindows(imagePath: string): Promise<void> {
-  // Escape the path for PowerShell (handle spaces and special chars)
   const escapedPath = imagePath.replace(/'/g, "''");
   const ps = [
     'Add-Type -AssemblyName System.Windows.Forms',
@@ -241,7 +240,6 @@ async function copyImageWindows(imagePath: string): Promise<void> {
 }
 
 async function copyHtmlWindows(htmlFilePath: string): Promise<void> {
-  // Escape the path for PowerShell (handle spaces and special chars)
   const escapedPath = htmlFilePath.replace(/'/g, "''");
   const ps = [
     'Add-Type -AssemblyName System.Windows.Forms',

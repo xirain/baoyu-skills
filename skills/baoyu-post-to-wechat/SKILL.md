@@ -1,6 +1,6 @@
 ---
 name: baoyu-post-to-wechat
-description: Posts content to WeChat Official Account (微信公众号) via API or Chrome CDP. Supports article posting (文章) with HTML, markdown, or plain text input, and image-text posting (图文) with multiple images. Use when user mentions "发布公众号", "post to wechat", "微信公众号", or "图文/文章".
+description: Posts content to WeChat Official Account (微信公众号) via API or Chrome CDP. Supports article posting (文章) with HTML, markdown, or plain text input, and image-text posting (贴图, formerly 图文) with multiple images. Use when user mentions "发布公众号", "post to wechat", "微信公众号", or "贴图/图文/文章".
 ---
 
 # Post to WeChat Official Account
@@ -204,7 +204,7 @@ Check extracted metadata from Step 3 (or HTML meta tags if direct HTML input).
 
 **Cover Image Check** (required for `article_type=news`):
 1. Use CLI `--cover` if provided.
-2. Else use frontmatter (`featureImage`, `coverImage`, `cover`, `image`).
+2. Else use frontmatter (`coverImage`, `featureImage`, `cover`, `image`).
 3. Else check article directory default path: `imgs/cover.png`.
 4. Else fallback to first inline content image.
 5. If still missing, stop and request a cover image before publishing.
