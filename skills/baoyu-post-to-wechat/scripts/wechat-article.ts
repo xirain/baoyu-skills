@@ -141,8 +141,14 @@ async function copyHtmlFromBrowser(cdp: CdpConnection, htmlFilePath: string, con
           for (const r of replacements) {
             const imgs = document.querySelectorAll('img[src="' + r.placeholder + '"], img[data-local-path="' + r.localPath + '"]');
             for (const img of imgs) {
-              const text = document.createTextNode(r.placeholder);
-              img.parentNode.replaceChild(text, img);
+              const figure = img.closest('figure');
+              if (figure && figure.parentNode) {
+                const text = document.createTextNode(r.placeholder);
+                figure.parentNode.replaceChild(text, figure);
+              } else if (img.parentNode) {
+                const text = document.createTextNode(r.placeholder);
+                img.parentNode.replaceChild(text, img);
+              }
             }
           }
           return true;
