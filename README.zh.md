@@ -695,7 +695,7 @@ AI 驱动的生成后端。
 # 豆包（Seedream）
 /baoyu-image-gen --prompt "一只可爱的猫" --image cat.png --provider seedream
 
-# 带参考图（Google、OpenAI、OpenRouter 或 Replicate）
+# 带参考图（Google、OpenAI、OpenRouter、Replicate 或 Seedream 5.0/4.5/4.0）
 /baoyu-image-gen --prompt "把它变成蓝色" --image out.png --ref source.png
 ```
 
@@ -710,7 +710,7 @@ AI 驱动的生成后端。
 | `--ar` | 宽高比（如 `16:9`、`1:1`、`4:3`） |
 | `--size` | 尺寸（如 `1024x1024`） |
 | `--quality` | `normal` 或 `2k`（默认：`2k`） |
-| `--ref` | 参考图片（Google、OpenAI、OpenRouter 或 Replicate） |
+| `--ref` | 参考图片（Google、OpenAI、OpenRouter、Replicate 或 Seedream 5.0/4.5/4.0） |
 
 **环境变量**（配置方法见[环境配置](#环境配置)）：
 | 变量 | 说明 | 默认值 |

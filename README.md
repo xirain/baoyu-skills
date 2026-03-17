@@ -695,7 +695,7 @@ AI SDK-based image generation using OpenAI, Google, OpenRouter, DashScope (Aliyu
 # Seedream (豆包)
 /baoyu-image-gen --prompt "一只可爱的猫" --image cat.png --provider seedream
 
-# With reference images (Google, OpenAI, OpenRouter, or Replicate)
+# With reference images (Google, OpenAI, OpenRouter, Replicate, or Seedream 5.0/4.5/4.0)
 /baoyu-image-gen --prompt "Make it blue" --image out.png --ref source.png
 ```
 
@@ -710,7 +710,7 @@ AI SDK-based image generation using OpenAI, Google, OpenRouter, DashScope (Aliyu
 | `--ar` | Aspect ratio (e.g., `16:9`, `1:1`, `4:3`) |
 | `--size` | Size (e.g., `1024x1024`) |
 | `--quality` | `normal` or `2k` (default: `2k`) |
-| `--ref` | Reference images (Google, OpenAI, OpenRouter or Replicate) |
+| `--ref` | Reference images (Google, OpenAI, OpenRouter, Replicate, or Seedream 5.0/4.5/4.0) |
 
 **Environment Variables** (see [Environment Configuration](#environment-configuration) for setup):
 | Variable | Description | Default |

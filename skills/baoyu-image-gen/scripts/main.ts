@@ -14,6 +14,8 @@ import type {
 type ProviderModule = {
   getDefaultModel: () => string;
   generateImage: (prompt: string, model: string, args: CliArgs) => Promise<Uint8Array>;
+  validateArgs?: (model: string, args: CliArgs) => void;
+  getDefaultOutputExtension?: (model: string, args: CliArgs) => string;
 };
 
 type PreparedTask = {
@@ -78,7 +80,7 @@ Options:
   --size <WxH>              Size (e.g., 1024x1024)
   --quality normal|2k       Quality preset (default: 2k)
   --imageSize 1K|2K|4K      Image size for Google/OpenRouter (default: from quality)
-  --ref <files...>          Reference images (Google multimodal, OpenAI GPT Image edits, OpenRouter multimodal, or Replicate)
+  --ref <files...>          Reference images (Google, OpenAI, OpenRouter, Replicate, or Seedream 4.0/4.5/5.0)
   --n <count>               Number of images for the current task (default: 1)
   --json                    JSON output
   -h, --help                Show help
@@ -560,11 +562,17 @@ async function readPromptFromStdin(): Promise<string | null> {
   }
 }
 
-export function normalizeOutputImagePath(p: string): string {
+export function normalizeOutputImagePath(p: string, defaultExtension = ".png"): string {
   const full = path.resolve(p);
   const ext = path.extname(full);
   if (ext) return full;
-  return `${full}.png`;
+  return `${full}${defaultExtension}`;
+}
+
+function inferProviderFromModel(model: string | null): Provider | null {
+  if (!model) return null;
+  if (model.includes("seedream") || model.includes("seededit")) return "seedream";
+  return null;
 }
 
 export function detectProvider(args: CliArgs): Provider {
@@ -574,10 +582,11 @@ export function detectProvider(args: CliArgs): Provider {
     args.provider !== "google" &&
     args.provider !== "openai" &&
     args.provider !== "openrouter" &&
-    args.provider !== "replicate"
+    args.provider !== "replicate" &&
+    args.provider !== "seedream"
   ) {
     throw new Error(
-      "Reference images require a ref-capable provider. Use --provider google (Gemini multimodal), --provider openai (GPT Image edits), --provider openrouter (OpenRouter multimodal), or --provider replicate."
+      "Reference images require a ref-capable provider. Use --provider google (Gemini multimodal), --provider openai (GPT Image edits), --provider openrouter (OpenRouter multimodal), --provider replicate, or --provider seedream for supported Seedream models."
     );
   }
 
@@ -590,14 +599,23 @@ export function detectProvider(args: CliArgs): Provider {
   const hasReplicate = !!process.env.REPLICATE_API_TOKEN;
   const hasJimeng = !!(process.env.JIMENG_ACCESS_KEY_ID && process.env.JIMENG_SECRET_ACCESS_KEY);
   const hasSeedream = !!process.env.ARK_API_KEY;
+  const modelProvider = inferProviderFromModel(args.model);
+
+  if (modelProvider === "seedream") {
+    if (!hasSeedream) {
+      throw new Error("Model looks like a Volcengine ARK image model, but ARK_API_KEY is not set.");
+    }
+    return "seedream";
+  }
 
   if (args.referenceImages.length > 0) {
     if (hasGoogle) return "google";
     if (hasOpenai) return "openai";
     if (hasOpenrouter) return "openrouter";
     if (hasReplicate) return "replicate";
+    if (hasSeedream) return "seedream";
     throw new Error(
-      "Reference images require Google, OpenAI, OpenRouter, or Replicate. Set GOOGLE_API_KEY/GEMINI_API_KEY, OPENAI_API_KEY, OPENROUTER_API_KEY, or REPLICATE_API_TOKEN, or remove --ref."
+      "Reference images require Google, OpenAI, OpenRouter, Replicate, or supported Seedream models. Set GOOGLE_API_KEY/GEMINI_API_KEY, OPENAI_API_KEY, OPENROUTER_API_KEY, REPLICATE_API_TOKEN, or ARK_API_KEY, or remove --ref."
     );
   }
 
@@ -701,6 +719,8 @@ async function prepareSingleTask(args: CliArgs, extendConfig: Partial<ExtendConf
   const provider = detectProvider(args);
   const providerModule = await loadProviderModule(provider);
   const model = getModelForProvider(provider, args.model, extendConfig, providerModule);
+  providerModule.validateArgs?.(model, args);
+  const defaultOutputExtension = providerModule.getDefaultOutputExtension?.(model, args) ?? ".png";
 
   return {
     id: "single",
@@ -708,7 +728,7 @@ async function prepareSingleTask(args: CliArgs, extendConfig: Partial<ExtendConf
     args,
     provider,
     model,
-    outputPath: normalizeOutputImagePath(args.imagePath),
+    outputPath: normalizeOutputImagePath(args.imagePath, defaultOutputExtension),
     providerModule,
   };
 }
@@ -784,13 +804,15 @@ async function prepareBatchTasks(
     const provider = detectProvider(taskArgs);
     const providerModule = await loadProviderModule(provider);
     const model = getModelForProvider(provider, taskArgs.model, extendConfig, providerModule);
+    providerModule.validateArgs?.(model, taskArgs);
+    const defaultOutputExtension = providerModule.getDefaultOutputExtension?.(model, taskArgs) ?? ".png";
     prepared.push({
       id: task.id || `task-${String(i + 1).padStart(2, "0")}`,
       prompt,
       args: taskArgs,
       provider,
       model,
-      outputPath: normalizeOutputImagePath(taskArgs.imagePath),
+      outputPath: normalizeOutputImagePath(taskArgs.imagePath, defaultOutputExtension),
       providerModule,
     });
   }

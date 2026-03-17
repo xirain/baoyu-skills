@@ -216,6 +216,39 @@ test("detectProvider selects an available ref-capable provider for reference-ima
   );
 });
 
+test("detectProvider infers Seedream from model id and allows Seedream reference-image workflows", (t) => {
+  useEnv(t, {
+    GOOGLE_API_KEY: null,
+    OPENAI_API_KEY: null,
+    OPENROUTER_API_KEY: null,
+    DASHSCOPE_API_KEY: null,
+    REPLICATE_API_TOKEN: null,
+    JIMENG_ACCESS_KEY_ID: null,
+    JIMENG_SECRET_ACCESS_KEY: null,
+    ARK_API_KEY: "ark-key",
+  });
+
+  assert.equal(
+    detectProvider(
+      makeArgs({
+        model: "doubao-seedream-4-5-251128",
+        referenceImages: ["ref.png"],
+      }),
+    ),
+    "seedream",
+  );
+
+  assert.equal(
+    detectProvider(
+      makeArgs({
+        provider: "seedream",
+        referenceImages: ["ref.png"],
+      }),
+    ),
+    "seedream",
+  );
+});
+
 test("batch worker and provider-rate-limit configuration prefer env over EXTEND config", (t) => {
   useEnv(t, {
     BAOYU_IMAGE_GEN_MAX_WORKERS: "12",
@@ -294,6 +327,7 @@ test("loadBatchTasks and createTaskArgs resolve batch-relative paths", async (t)
 
 test("path normalization, worker count, and retry classification follow expected rules", () => {
   assert.match(normalizeOutputImagePath("out/sample"), /out[\\/]+sample\.png$/);
+  assert.match(normalizeOutputImagePath("out/sample", ".jpg"), /out[\\/]+sample\.jpg$/);
   assert.match(normalizeOutputImagePath("out/sample.webp"), /out[\\/]+sample\.webp$/);
 
   assert.equal(getWorkerCount(8, null, 3), 3);
