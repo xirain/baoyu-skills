@@ -450,7 +450,7 @@ function renderMarkdownWithPlaceholders(
 
 function replaceAllPlaceholders(html: string, placeholder: string, replacement: string): string {
   const escapedPlaceholder = placeholder.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  return html.replace(new RegExp(escapedPlaceholder, "g"), replacement);
+  return html.replace(new RegExp(escapedPlaceholder + "(?!\\d)", "g"), replacement);
 }
 
 function extractHtmlContent(htmlPath: string): string {
