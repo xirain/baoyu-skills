@@ -167,3 +167,4 @@ posts/
 .release-artifacts/
 .worktrees/
 youtube-transcript/
+.omx/
