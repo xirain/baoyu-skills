@@ -2,6 +2,17 @@
 
 [English](./CHANGELOG.md) | 中文
 
+## 1.103.0 - 2026-04-12
+
+### 新功能
+- `baoyu-diagram`：新增多图模式 —— 分析文章内容，在识别出的位置批量生成图表；新增 `--density` 参数（`minimal`、`balanced`、`per-section`、`rich`）和 `--mode` 参数（`single`、`multi`、`auto`）；根据输入自动判断模式（文件路径→多图，短主题→单图）；自动在文章中插入图表链接；输出目录结构 `diagram/{article-slug}/NN-{type}-{slug}/`
+
+### 修复
+- `baoyu-article-illustrator`：修复生成图像中出现颜色名称和色值文字的问题 —— 在所有调色板参考文件和提示构建规则中添加语义约束
+- `baoyu-cover-image`：修复生成图像中出现颜色名称和色值文字的问题 —— 在所有调色板参考文件和提示模板中添加约束
+- `baoyu-image-cards`：修复生成图像中出现颜色名称文字的问题
+- `baoyu-post-to-wechat`：修复文章摘要中 HTML 实体未解码及 HTML 标签未剥离的问题，避免微信文章摘要显示乱码
+
 ## 1.102.0 - 2026-04-12
 
 ### 新功能

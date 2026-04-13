@@ -2,6 +2,17 @@
 
 English | [中文](./CHANGELOG.zh.md)
 
+## 1.103.0 - 2026-04-12
+
+### Features
+- `baoyu-diagram`: add multi-diagram mode — analyze article content and generate multiple diagrams at identified positions; new `--density` option (`minimal`, `balanced`, `per-section`, `rich`) and `--mode` option (`single`, `multi`, `auto`); auto-detects mode from input (file path → multi, short topic → single); inserts diagram image links into article; output structure `diagram/{article-slug}/NN-{type}-{slug}/`
+
+### Fixes
+- `baoyu-article-illustrator`: prevent color names and hex codes from appearing as visible text in generated images — add semantic constraint to all palette references and prompt construction rules
+- `baoyu-cover-image`: prevent color names and hex codes from appearing as visible text in generated images — add constraint to all palette references and prompt template
+- `baoyu-image-cards`: prevent color names from appearing as visible text in generated images
+- `baoyu-post-to-wechat`: decode HTML entities and strip HTML tags from article summary before using as WeChat article digest
+
 ## 1.102.0 - 2026-04-12
 
 ### Features
