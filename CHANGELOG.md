@@ -2,6 +2,11 @@
 
 English | [中文](./CHANGELOG.zh.md)
 
+## 1.110.0 - 2026-04-21
+
+### Features
+- `baoyu-imagine`: add `gpt-image-2` support for OpenAI image generation and edits, make it the default OpenAI model, and document the official size/quality mapping, custom-size constraints, and Azure deployment guidance
+
 ## 1.109.0 - 2026-04-21
 
 ### Features

@@ -25,10 +25,13 @@ ${BUN_X} {baseDir}/scripts/main.ts --prompt "Make blue" --image out.png --ref so
 
 ```bash
 # OpenAI
-${BUN_X} {baseDir}/scripts/main.ts --prompt "A cat" --image out.png --provider openai
+${BUN_X} {baseDir}/scripts/main.ts --prompt "A cat" --image out.png --provider openai --model gpt-image-2
 
 # Azure OpenAI (model = deployment name)
-${BUN_X} {baseDir}/scripts/main.ts --prompt "A cat" --image out.png --provider azure --model gpt-image-1.5
+${BUN_X} {baseDir}/scripts/main.ts --prompt "A cat" --image out.png --provider azure --model gpt-image-2
+
+# OpenAI GPT Image 2 custom 4K size
+${BUN_X} {baseDir}/scripts/main.ts --prompt "A cinematic landscape" --image out.png --provider openai --model gpt-image-2 --size 3840x2160
 
 # Google with explicit model
 ${BUN_X} {baseDir}/scripts/main.ts --prompt "Make blue" --image out.png --provider google --model gemini-3-pro-image-preview --ref source.png
